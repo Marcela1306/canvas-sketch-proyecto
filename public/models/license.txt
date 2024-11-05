@@ -1,0 +1,11 @@
+Model Information:
+* title:	Modern Apartment Elevator
+* source:	https://sketchfab.com/3d-models/modern-apartment-elevator-176d932048b44ca0aeb3207ae92d8f41
+* author:	cyclonicninja69 (https://sketchfab.com/cyclonicninja69)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Modern Apartment Elevator" (https://sketchfab.com/3d-models/modern-apartment-elevator-176d932048b44ca0aeb3207ae92d8f41) by cyclonicninja69 (https://sketchfab.com/cyclonicninja69) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
