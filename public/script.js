@@ -103,11 +103,12 @@ function setupElevator() {
     human.visible = false;
 
     const ropeGeometry = new THREE.CylinderGeometry(0.02, 0.02, 10, 8);
-    const ropeMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+    const ropeMaterial = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Color de cuerda más claro
     rope = new THREE.Mesh(ropeGeometry, ropeMaterial);
     rope.position.set(0, 3, 0);
     scene.add(rope);
 }
+
 
 function setHumanSize(weight) {
     const sizes = {

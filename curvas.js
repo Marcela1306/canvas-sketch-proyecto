@@ -4,12 +4,15 @@ const settings = {
   dimensions: [ 1080, 1080 ],
 };
 
-const sketch = () => {
+const sketch = ({ canvas }) => {
   const points = [
     new Point({ x: 200, y: 540 }),
     new Point({ x: 400, y: 300, control: true}),
     new Point({ x: 800, y: 540 }),
   ];
+
+  canvas.addEventListener('mousedown', onmousedown);
+
   return({ context, width, height }) => {
     context.fillStyle = 'white';
     context.fillRect(0, 0, width, height);
