@@ -75,9 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
     for(let i = 1; i < points.length; i++) {
       context.lineTo(points[i].x, points[i].y);
     }
-
-    
-
    // for(let i = 1; i < points.length; i += 2) {
    //   context.quadraticCurveTo(points[i + 0].x, points[i + 0].y, points[i + 1].x, points[i + 1].y);
    // }
@@ -115,36 +112,39 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedPoint = null;
 
   const onmousedown = (e) => {
-    const x = (e.offsetX / canvas.offsetWidth) * canvas.width;
-    const y = (e.offsetY / canvas.offsetHeight) * canvas.height;
-
-    selectedPoint = points.find((point) => point.hitTest(x, y));
-
-    if (selectedPoint) {
-      window.addEventListener('mousemove', onmousemove);
-      window.addEventListener('mouseup', onmouseup);
-    }
-  };
-
-  const onmousemove = (e) => {
-    if (selectedPoint) {
       const x = (e.offsetX / canvas.offsetWidth) * canvas.width;
       const y = (e.offsetY / canvas.offsetHeight) * canvas.height;
-
-      selectedPoint.x = x;
-      selectedPoint.y = y;
-
-      drawCanvas();
-    }
-  };
-
-  const onmouseup = () => {
-    selectedPoint = null;
-    window.removeEventListener('mousemove', onmousemove);
-    window.removeEventListener('mouseup', onmouseup);
-  };
-
-  canvas.addEventListener('mousedown', onmousedown);
-
-  drawCanvas();
-});
+  
+      selectedPoint = points.find((point) => point.hitTest(x, y));
+  
+      if (!selectedPoint) {
+        points.push(new Point({ x, y }));
+        drawCanvas();
+      } else {
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      }
+    };
+  
+    const onMouseMove = (e) => {
+      if (selectedPoint) {
+        const x = (e.offsetX / canvas.offsetWidth) * canvas.width;
+        const y = (e.offsetY / canvas.offsetHeight) * canvas.height;
+  
+        selectedPoint.x = x;
+        selectedPoint.y = y;
+  
+        drawCanvas();
+      }
+    };
+  
+    const onMouseUp = () => {
+      selectedPoint = null;
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  
+    canvas.addEventListener('mousedown', onmousedown);
+  
+    drawCanvas();
+  });
