@@ -4,95 +4,91 @@ import math from 'https://cdn.skypack.dev/canvas-sketch-util/math';
 import colormap from 'https://cdn.skypack.dev/colormap';
 
 const settings = {
-    dimensions: [1080, 1080],
+    dimensions: [window.innerWidth, window.innerHeight], // Ajuste dinámico según el tamaño de la ventana
+    animate: true,
+    resizeCanvas: true, // Asegura que el canvas se redimensione
 };
 
 const sketch = ({ width, height }) => {
-    const cols = 72;
-    const rows = 8;
+    const cols = 72;  // Número de columnas
+    const rows = 8;   // Número de filas
     const numCells = cols * rows;
 
-    const gw = width * 0.8;
-    const gh = height * 0.8;
+    const gw = width * 0.8; // Ancho de la cuadrícula, 80% del lienzo
+    const gh = height * 0.8; // Alto de la cuadrícula, 80% del lienzo
 
-    const cw = gw / cols;
-    const ch = gh / rows;
+    const cw = gw / cols; // Ancho de cada celda
+    const ch = gh / rows; // Alto de cada celda
 
-    const mx = (width - gw) * 0.5;
-    const my = (height - gh) * 0.5;
+    const mx = (width - gw) * 0.5; // Margen horizontal
+    const my = (height - gh) * 0.5; // Margen vertical
 
     const points = [];
     let x, y, n, lineWidth, color;
-    let frequency = 0.002;
-    let amplitude = 90;
+    const frequency = 0.002;
+    const amplitude = 90;
 
     const colors = colormap({
         colormap: 'cubehelix',
-        nshades: amplitude
+        nshades: amplitude,
     });
 
+    // Creación de puntos basados en las celdas
     for (let i = 0; i < numCells; i++) {
         x = (i % cols) * cw;
         y = Math.floor(i / cols) * ch;
 
         n = random.noise2D(x, y, frequency, amplitude);
-        x += n;
-        y += n;
-
         lineWidth = math.mapRange(n, amplitude, amplitude, 2, 10);
         color = colors[Math.floor(math.mapRange(n, -amplitude, amplitude, 0, amplitude))];
 
         points.push(new Point({ x, y, lineWidth, color }));
     }
 
-    return ({ context, width, height }) => {
+    return ({ context, width, height, frame }) => {
         context.fillStyle = 'black';
         context.fillRect(0, 0, width, height);
 
         context.save();
         context.translate(mx, my);
         context.translate(cw * 0.5, ch * 0.5);
-        context.strokeStyle = 'red';
-        context.lineWidth = 4;
+
+        // Actualizar las posiciones de los puntos con ruido
+        points.forEach(point => {
+            n = random.noise2D(point.ix + frame * 3, point.iy, frequency, amplitude);
+            point.x = point.ix + n;
+            point.y = point.iy + n;
+        });
 
         let lastx, lasty;
 
+        // Dibujo de las líneas entre los puntos
         for (let r = 0; r < rows; r++) {
-            
-
             for (let c = 0; c < cols - 1; c++) {
-                const curr = points[r * cols + c + 0];
+                const curr = points[r * cols + c];
                 const next = points[r * cols + c + 1];
 
-                const mx = curr.x + (next.x - curr.x) * 1.8;
-                const my = curr.y + (next.y - curr.y) * 4.5;
+                const mx = curr.x + (next.x - curr.x) * 0.8;
+                const my = curr.y + (next.y - curr.y) * 5.5;
 
-                if(!c) {
+                if (!c) {
                     lastx = curr.x;
                     lasty = curr.y;
                 }
 
                 context.beginPath();
                 context.lineWidth = curr.lineWidth;
-                context.strokeStyle = curr.color
+                context.strokeStyle = curr.color;
 
-               // if (c === 0) context.moveTo(curr.x, curr.y);
-               // else if (c === cols - 2) context.quadraticCurveTo(curr.x, curr.y, next.x, next.y);
-              //  else context.quadraticCurveTo(curr.x, curr.y, mx, my);
-              context.moveTo(lastx, lasty);
-              context.quadraticCurveTo(curr.x, curr.y, mx, my);
+                context.moveTo(lastx, lasty);
+                context.quadraticCurveTo(curr.x, curr.y, mx, my);
 
                 context.stroke();
 
                 lastx = mx - c / cols * 250;
                 lasty = my - r / rows * 250;
             }
-             // Corregido el método.
-        } 
-
-        points.forEach((point) => {
-          //  point.draw(context);
-        });
+        }
 
         context.restore();
     };
@@ -106,6 +102,9 @@ class Point {
         this.y = y;
         this.lineWidth = lineWidth;
         this.color = color;
+
+        this.ix = x;  // Coordenada original
+        this.iy = y;  // Coordenada original
     }
 
     draw(context) {
