@@ -1,5 +1,7 @@
 import CanvasSketch from 'https://cdn.skypack.dev/canvas-sketch';
 import random from 'https://cdn.skypack.dev/canvas-sketch-util/random';
+import math from 'https://cdn.skypack.dev/canvas-sketch-util/math';
+import colormap from 'colormap';
 
 const settings = {
     dimensions: [1080, 1080],
@@ -20,7 +22,7 @@ const sketch = ({ width, height }) => {
     const my = (height - gh) * 0.5;
 
     const points = [];
-    let x, y, n;
+    let x, y, n, lineWidth;
     let frequency = 0.002;
     let amplitude = 90;
 
@@ -32,7 +34,9 @@ const sketch = ({ width, height }) => {
         x += n;
         y += n;
 
-        points.push(new Point({ x, y }));
+        lineWidth = math.mapRange(n, amplitude, amplitude, 2, 20);
+
+        points.push(new Point({ x, y, lineWidth }));
     }
 
     return ({ context, width, height }) => {
@@ -45,8 +49,10 @@ const sketch = ({ width, height }) => {
         context.strokeStyle = 'red';
         context.lineWidth = 4;
 
+        let lastx, lasty;
+
         for (let r = 0; r < rows; r++) {
-            context.beginPath();
+            
 
             for (let c = 0; c < cols - 1; c++) {
                 const curr = points[r * cols + c + 0];
@@ -55,11 +61,26 @@ const sketch = ({ width, height }) => {
                 const mx = curr.x + (next.x - curr.x) * 0.5;
                 const my = curr.y + (next.y - curr.y) * 0.5;
 
-                if (c === 0) context.moveTo(curr.x, curr.y);
-                else if (c === cols - 2) context.quadraticCurveTo(curr.x, curr.y, next.x, next.y);
-                else context.quadraticCurveTo(curr.x, curr.y, mx, my);
+                if(!c) {
+                    lastx = curr.x;
+                    lasty = curr.y;
+                }
+
+                context.beginPath();
+                context.lineWidth = curr.lineWidth;
+
+               // if (c === 0) context.moveTo(curr.x, curr.y);
+               // else if (c === cols - 2) context.quadraticCurveTo(curr.x, curr.y, next.x, next.y);
+              //  else context.quadraticCurveTo(curr.x, curr.y, mx, my);
+              context.moveTo(lastx, lasty);
+              context.quadraticCurveTo(curr.x, curr.y, mx, my);
+
+                context.stroke();
+
+                lastx = mx;
+                lasty = my;
             }
-            context.stroke(); // Corregido el método.
+             // Corregido el método.
         }
 
         points.forEach((point) => {
@@ -73,9 +94,10 @@ const sketch = ({ width, height }) => {
 CanvasSketch(sketch, settings);
 
 class Point {
-    constructor({ x, y }) {
+    constructor({ x, y, lineWidth }) {
         this.x = x;
         this.y = y;
+        this.lineWidth = lineWidth;
     }
 
     draw(context) {
