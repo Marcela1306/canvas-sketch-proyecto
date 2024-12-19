@@ -1,15 +1,15 @@
 import CanvasSketch from 'https://cdn.skypack.dev/canvas-sketch';
 import random from 'https://cdn.skypack.dev/canvas-sketch-util/random';
 import math from 'https://cdn.skypack.dev/canvas-sketch-util/math';
-import colormap from 'colormap';
+import colormap from 'https://cdn.skypack.dev/colormap';
 
 const settings = {
     dimensions: [1080, 1080],
 };
 
 const sketch = ({ width, height }) => {
-    const cols = 12;
-    const rows = 6;
+    const cols = 72;
+    const rows = 8;
     const numCells = cols * rows;
 
     const gw = width * 0.8;
@@ -22,9 +22,14 @@ const sketch = ({ width, height }) => {
     const my = (height - gh) * 0.5;
 
     const points = [];
-    let x, y, n, lineWidth;
+    let x, y, n, lineWidth, color;
     let frequency = 0.002;
     let amplitude = 90;
+
+    const colors = colormap({
+        colormap: 'cubehelix',
+        nshades: amplitude
+    });
 
     for (let i = 0; i < numCells; i++) {
         x = (i % cols) * cw;
@@ -34,9 +39,10 @@ const sketch = ({ width, height }) => {
         x += n;
         y += n;
 
-        lineWidth = math.mapRange(n, amplitude, amplitude, 2, 20);
+        lineWidth = math.mapRange(n, amplitude, amplitude, 2, 10);
+        color = colors[Math.floor(math.mapRange(n, -amplitude, amplitude, 0, amplitude))];
 
-        points.push(new Point({ x, y, lineWidth }));
+        points.push(new Point({ x, y, lineWidth, color }));
     }
 
     return ({ context, width, height }) => {
@@ -58,8 +64,8 @@ const sketch = ({ width, height }) => {
                 const curr = points[r * cols + c + 0];
                 const next = points[r * cols + c + 1];
 
-                const mx = curr.x + (next.x - curr.x) * 0.5;
-                const my = curr.y + (next.y - curr.y) * 0.5;
+                const mx = curr.x + (next.x - curr.x) * 1.8;
+                const my = curr.y + (next.y - curr.y) * 4.5;
 
                 if(!c) {
                     lastx = curr.x;
@@ -68,6 +74,7 @@ const sketch = ({ width, height }) => {
 
                 context.beginPath();
                 context.lineWidth = curr.lineWidth;
+                context.strokeStyle = curr.color
 
                // if (c === 0) context.moveTo(curr.x, curr.y);
                // else if (c === cols - 2) context.quadraticCurveTo(curr.x, curr.y, next.x, next.y);
@@ -77,14 +84,14 @@ const sketch = ({ width, height }) => {
 
                 context.stroke();
 
-                lastx = mx;
-                lasty = my;
+                lastx = mx - c / cols * 250;
+                lasty = my - r / rows * 250;
             }
              // Corregido el método.
-        }
+        } 
 
         points.forEach((point) => {
-            point.draw(context);
+          //  point.draw(context);
         });
 
         context.restore();
@@ -94,10 +101,11 @@ const sketch = ({ width, height }) => {
 CanvasSketch(sketch, settings);
 
 class Point {
-    constructor({ x, y, lineWidth }) {
+    constructor({ x, y, lineWidth, color }) {
         this.x = x;
         this.y = y;
         this.lineWidth = lineWidth;
+        this.color = color;
     }
 
     draw(context) {
