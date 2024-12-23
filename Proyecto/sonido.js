@@ -21,18 +21,23 @@ const sketch = () => {
 
 // Agregar listener para reproducir audio al hacer clic
 const addListeners = () => {
-  window.addEventListener('mouseup', () => {
-    audio
-      .play()
-      .then(() => {
-        console.log('Reproduciendo audio');
-      })
-      .catch((error) => {
-        console.error('Error al reproducir audio:', error);
-      });
-  });
-};
-
+    window.addEventListener('mouseup', () => {
+      if (audio.paused) {
+        audio
+          .play()
+          .then(() => {
+            console.log('Reproduciendo audio');
+          })
+          .catch((error) => {
+            console.error('Error al reproducir audio:', error);
+          });
+      } else {
+        audio.pause();
+        console.log('Audio pausado');
+      }
+    });
+  };
+  
 // Inicializar
 addListeners();
 CanvasSketch(sketch, settings);
