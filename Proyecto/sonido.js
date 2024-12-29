@@ -1,5 +1,7 @@
 import CanvasSketch from 'https://cdn.skypack.dev/canvas-sketch';
 import math from 'https://cdn.skypack.dev/canvas-sketch-util/math';
+import random from 'https://cdn.skypack.dev/canvas-sketch-util/random';
+import eases from 'https://cdn.skypack.dev/eases';
 
 const settings = {
   dimensions: [1080, 1080],
@@ -9,87 +11,118 @@ const settings = {
 let audio;
 let audioContext, audioData, sourceNode, analyserNode;
 let manager;
+let minDb, maxDb;
 
 const sketch = () => {
-  const bins = [4, 12, 37];
+  const numCircles = 5;
+  const numSlices = 9;
+  const Slices = Math.PI * 2 / numSlices;
+  const radius = 200;
+
+  const bins = [];
+  const lineWidths = [];
+
+  let lineWidth, bin, mapped;
+
+  for (let i = 0; i < numCircles * numSlices; i++) {
+    bin = random.rangeFloor(4, 64);
+    if (random.value() > 0.5) bin = 0;
+    bins.push(bin);
+  }
+
+  for (let i = 0; i < numCircles; i++) {
+    const t = i / (numCircles - 1);
+    lineWidth = eases.quadIn(t) * 200 + 20;
+    lineWidths.push(lineWidth);
+  }
+
   return ({ context, width, height }) => {
     // Dibujar fondo en canvas
-    context.fillStyle = 'white';
+    context.fillStyle = '#EEEAE0';
     context.fillRect(0, 0, width, height);
 
-    if(!audioContext) return;
+    if (!audioContext) return;
 
     analyserNode.getFloatFrequencyData(audioData);
-
-    for(let i = 0; i < bins.length; i++)  {
-    const bin = bins[i];
-    const mapped = math.mapRange(audioData[bin], analyserNode.minDecibels, analyserNode.maxDecibels, 0, 1, true);
-    const radius = mapped * 300;
-
     context.save();
     context.translate(width * 0.5, height * 0.5);
-    context.lineWidth = 10;
-    context.beginPath();
-    context.arc(0, 0, radius, 0, Math.PI * 2);
-    context.stroke();
+
+    let cradius = radius;
+
+    for (let i = 0; i < numCircles; i++) {
+      context.save();
+      for (let j = 0; j < numSlices; j++) {
+        context.rotate(Slices);
+        context.lineWidth = lineWidths[i];
+
+        bin = bins[i * numSlices + j];
+        if (!bin) continue;
+
+        mapped = math.mapRange(audioData[bin], minDb, maxDb, 0, 1, true);
+        lineWidth = lineWidths[i] * mapped;
+
+        if (lineWidth < 1) continue;
+
+        context.lineWidth = lineWidth;
+
+        context.beginPath();
+        context.arc(0, 0, cradius + context.lineWidth * 0.5, 0, Slices);
+        context.stroke();
+      }
+      cradius += lineWidths[i];
+      context.restore();
+    }
     context.restore();
-    }  
   };
 };
 
 const createAudio = () => {
-    // Crear elemento de audio
-    audio = document.createElement('audio');
-    audio.src = '/Sonido/Aventura%20-%20Brindo%20Con%20Agua%20(Video%20Lyric%20Oficial).mp3'; // Ruta relativa al servidor
-    audio.crossOrigin = 'anonymous'; // Soluciona posibles problemas de CORS
-    audioContext = new AudioContext();
-    sourceNode = audioContext.createMediaElementSource(audio);
-    sourceNode.connect(audioContext.destination);
+  // audio
+  audio = document.createElement('audio');
+  audio.src = '/Sonido/Aventura%20-%20Brindo%20Con%20Agua%20(Video%20Lyric%20Oficial).mp3'; // musica
+  audio.crossOrigin = 'anonymous';
+  audioContext = new AudioContext();
+  sourceNode = audioContext.createMediaElementSource(audio);
+  sourceNode.connect(audioContext.destination);
 
-    analyserNode = audioContext.createAnalyser();
-    analyserNode.fftSize = 512;
-    analyserNode.smoothingTimeConstant = 0.9;
-    sourceNode.connect(analyserNode);
+  analyserNode = audioContext.createAnalyser();
+  analyserNode.fftSize = 512;
+  analyserNode.smoothingTimeConstant = 0.9;
+  sourceNode.connect(analyserNode);
 
-    audioData = new Float32Array(analyserNode.frequencyBinCount);
-};
+  minDb = analyserNode.minDecibels;
+  maxDb = analyserNode.maxDecibels;
 
-const getAverage = (data) => {
-    let sum = 0;
-
-    for(let i = 0; i < data.length; i++) {
-        sum +=data[i];
-    }
-    return sum / data.length;
+  audioData = new Float32Array(analyserNode.frequencyBinCount);
 };
 
 // Agregar listener para reproducir audio al hacer clic
 const addListeners = () => {
-    window.addEventListener('mouseup', () => {
-        if(!audioContext) createAudio();
-      if (audio.paused) {
-        audio
-          .play()
-          .then(() => {
-            manager.play()
-            console.log('Reproduciendo audio');
-          })
-          .catch((error) => {
-            console.error('Error al reproducir audio:', error);
-          });
-      } else {
-        audio.pause();
-        manager.pause();
-        console.log('Audio pausado');
-      }
-    });
-  };
+  window.addEventListener('mouseup', () => {
+    if (!audioContext) createAudio();
+    if (audio.paused) {
+      audio
+        .play()
+        .then(() => {
+          manager.play();
+          console.log('Reproduciendo audio');
+        })
+        .catch((error) => {
+          console.error('Error al reproducir audio:', error);
+        });
+    } else {
+      audio.pause();
+      manager.pause();
+      console.log('Audio pausado');
+    }
+  });
+};
   
 // Inicializar
-const star = async () => {
-    addListeners();
-    manager = await CanvasSketch(sketch, settings);
-    manager.pause();
+const start = async () => {
+  addListeners();
+  manager = await CanvasSketch(sketch, settings);
+  manager.pause();
 };
 
-star();
+start();
