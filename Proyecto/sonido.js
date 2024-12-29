@@ -1,4 +1,5 @@
 import CanvasSketch from 'https://cdn.skypack.dev/canvas-sketch';
+import math from 'https://cdn.skypack.dev/canvas-sketch-util/math';
 
 const settings = {
   dimensions: [1080, 1080],
@@ -10,6 +11,7 @@ let audioContext, audioData, sourceNode, analyserNode;
 let manager;
 
 const sketch = () => {
+  const bins = [4, 12, 37];
   return ({ context, width, height }) => {
     // Dibujar fondo en canvas
     context.fillStyle = 'white';
@@ -19,17 +21,22 @@ const sketch = () => {
 
     analyserNode.getFloatFrequencyData(audioData);
 
-    const avg = getAverage(audioData);
+    for(let i = 0; i < bins.length; i++)  {
+    const bin = bins[i];
+    const mapped = math.mapRange(audioData[bin], analyserNode.minDecibels, analyserNode.maxDecibels, 0, 1, true);
+    const radius = mapped * 300;
 
     context.save();
     context.translate(width * 0.5, height * 0.5);
     context.lineWidth = 10;
     context.beginPath();
-    context.arc(0, 0, Math.abs(avg), 0, Math.PI * 2);
+    context.arc(0, 0, radius, 0, Math.PI * 2);
     context.stroke();
     context.restore();
+    }  
   };
 };
+
 const createAudio = () => {
     // Crear elemento de audio
     audio = document.createElement('audio');
@@ -40,11 +47,11 @@ const createAudio = () => {
     sourceNode.connect(audioContext.destination);
 
     analyserNode = audioContext.createAnalyser();
+    analyserNode.fftSize = 512;
+    analyserNode.smoothingTimeConstant = 0.9;
     sourceNode.connect(analyserNode);
 
-    audioData = new Float32Array(analyserNode.frequencyBinCount)
-
-   // console.log(audioData.length);
+    audioData = new Float32Array(analyserNode.frequencyBinCount);
 };
 
 const getAverage = (data) => {
@@ -55,6 +62,7 @@ const getAverage = (data) => {
     }
     return sum / data.length;
 };
+
 // Agregar listener para reproducir audio al hacer clic
 const addListeners = () => {
     window.addEventListener('mouseup', () => {
