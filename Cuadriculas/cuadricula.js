@@ -1,7 +1,7 @@
 import CanvasSketch from 'https://cdn.skypack.dev/canvas-sketch';
 import random from 'https://cdn.skypack.dev/canvas-sketch-util/random';
 import math from 'https://cdn.skypack.dev/canvas-sketch-util/math';
-    import colormap from 'https://cdn.skypack.dev/colormap';
+import colormap from 'https://cdn.skypack.dev/colormap';
 
 const settings = {
     dimensions: [window.innerWidth, window.innerHeight], // Ajuste dinámico según el tamaño de la ventana
