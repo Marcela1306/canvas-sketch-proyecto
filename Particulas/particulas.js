@@ -56,11 +56,12 @@ const sketch = ({ context, width, height, canvas }) => {
         cirRadius += fitRadius * 2 + gapCircle;
         dotRadius = (1 - eases.quadOut( i / numCircles)) * fitRadius;
     }
-
   
     return ({ context, width, height }) => {
         context.fillStyle = 'black';
         context.fillRect(0, 0, width, height);
+
+        particles.sort((a, b) => a.scale - b.scale);
 
         particles.forEach(particle => {
             particle.update();
