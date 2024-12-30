@@ -13,19 +13,49 @@ let elCanvas;
 
 const sketch = ({ context, width, height, canvas }) => {
     let x, y, particle;
+    let pos = [];
+
+    const numCircles = 15;
+    let dotRadius = 12;
+    let cirRadius = 0;
+    const fitRadius = dotRadius;
 
     elCanvas = canvas;
     canvas.addEventListener('mousedown', onmousedown);
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < numCircles; i++) {
+        const circunference = Math.PI * 2 * cirRadius;
+        const numFit = i ? Math.floor(circunference / (fitRadius * 2)) : 1;
+        const fitSlice = Math.PI * 2 / numFit;
+
+        for(let j = 0; j < numFit; j++) {
+            const theta = fitSlice * j;
+
+            x = Math.cos(theta) * cirRadius;
+            y = Math.sin(theta) * cirRadius;
+
+            x += width * 0.5;
+            y += height * 0.5;
+
+            particle = new Particle({x, y});
+            particles.push(particle);
+        }
+        cirRadius += fitRadius * 2;
+    }
+
+   /* for (let i = 0; i < 200; i++) {
         x = width * 0.5;
         y = height * 0.5;
+
+        random.insideCircle(400, pos);
+        x += pos[0];
+        y += pos[1];
 
         particle = new Particle({ x, y });
 
         particles.push(particle);
     }
-
+    */
     return ({ context, width, height }) => {
         context.fillStyle = 'black';
         context.fillRect(0, 0, width, height);
