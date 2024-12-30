@@ -1,5 +1,6 @@
 import CanvasSketch from 'https://cdn.skypack.dev/canvas-sketch';
 import random from 'https://cdn.skypack.dev/canvas-sketch-util/random';
+import eases from 'https://cdn.skypack.dev/eases';
 
 const settings = {
     dimensions: [1080, 1080],
@@ -12,12 +13,14 @@ const cursor = { x: 9999, y: 9999 };
 let elCanvas;
 
 const sketch = ({ context, width, height, canvas }) => {
-    let x, y, particle;
+    let x, y, particle, radius;
     let pos = [];
 
     const numCircles = 15;
     let dotRadius = 12;
     let cirRadius = 0;
+    const gapCircle = 8;
+    const gapDot = 4;
     const fitRadius = dotRadius;
 
     elCanvas = canvas;
@@ -25,7 +28,7 @@ const sketch = ({ context, width, height, canvas }) => {
 
     for (let i = 0; i < numCircles; i++) {
         const circunference = Math.PI * 2 * cirRadius;
-        const numFit = i ? Math.floor(circunference / (fitRadius * 2)) : 1;
+        const numFit = i ? Math.floor(circunference / (fitRadius * 2 + gapDot)) : 1;
         const fitSlice = Math.PI * 2 / numFit;
 
         for(let j = 0; j < numFit; j++) {
@@ -37,10 +40,14 @@ const sketch = ({ context, width, height, canvas }) => {
             x += width * 0.5;
             y += height * 0.5;
 
-            particle = new Particle({x, y});
+            radius = dotRadius;
+
+            particle = new Particle({x, y, radius});
             particles.push(particle);
         }
-        cirRadius += fitRadius * 2;
+
+        cirRadius += fitRadius * 2 + gapCircle;
+        dotRadius = (1 - eases.quadOut( i / numCircles)) * fitRadius;
     }
 
    /* for (let i = 0; i < 200; i++) {
@@ -114,10 +121,10 @@ class Particle {
 
         this.radius = radius;
 
-        this.minDist = 100;
-        this.pushFactor = 0.02;
-        this.pullFactor = 0.004;
-        this.dampFactor = 0.95;
+        this.minDist = random.range(100, 200);
+        this.pushFactor = random.range(0.01, 0.02);
+        this.pullFactor = random.range(0.002, 0.006);
+        this.dampFactor = random.range(0.90, 0.95);
     }
 
     update() {
