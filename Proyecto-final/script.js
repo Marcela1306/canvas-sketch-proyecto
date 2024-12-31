@@ -4,123 +4,157 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Cuadrícula Animada
-function drawGrid() {
-  const cols = 20;
-  const rows = 20;
-  const cellWidth = canvas.width / cols;
-  const cellHeight = canvas.height / rows;
+let mouseX = canvas.width / 2;
+let mouseY = canvas.height / 2;
 
-  for (let x = 0; x < cols; x++) {
-    for (let y = 0; y < rows; y++) {
-      const posX = x * cellWidth + cellWidth / 2;
-      const posY = y * cellHeight + cellHeight / 2;
+// Inicializamos el sonido pero no lo reproducimos inmediatamente
+const soundEffect = new Audio('./audio/Palillos%20Chinos%20Banda%20Cumbia.mp3');
+soundEffect.loop = true;
 
-      const noise = Math.sin((x + y + performance.now() / 1000) * 0.5) * 5;
-      ctx.beginPath();
-      ctx.arc(posX + noise, posY + noise, 5, 0, Math.PI * 2);
-      ctx.fillStyle = `hsl(${(x + y) * 10}, 50%, 50%)`;
-      ctx.fill();
+// Definimos un número máximo de partículas
+const maxParticles = 500;
+
+// Detectamos cuando el usuario hace clic para empezar a reproducir el audio
+canvas.addEventListener('click', () => {
+    if (audioContext.state === 'suspended') {
+        audioContext.resume(); // Resumir el AudioContext si está suspendido
     }
-  }
-}
-
-// Curvas Bézier Interactivas
-let points = [
-  { x: 100, y: 300 },
-  { x: 300, y: 200 },
-  { x: 500, y: 400 }
-];
-
-function drawBezier() {
-  ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-
-  for (let i = 1; i < points.length; i++) {
-    const cp = points[i - 1];
-    const ep = points[i];
-    ctx.quadraticCurveTo(cp.x, cp.y, ep.x, ep.y);
-  }
-  ctx.strokeStyle = 'white';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-}
-
-// Sistema de Partículas
-class Particle {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.vx = Math.random() * 2 - 1;
-    this.vy = Math.random() * 2 - 1;
-    this.radius = 3;
-  }
-
-  draw() {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = 'red';
-    ctx.fill();
-  }
-
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-
-    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-
-    this.draw();
-  }
-}
-
-const particles = [];
-for (let i = 0; i < 100; i++) {
-  particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height));
-}
-
-// Visualización de Audio
-const audio = new Audio('./assets/Palillos Chinos Banda Cumbia.mp3');
-const audioContext = new AudioContext();
-const analyser = audioContext.createAnalyser();
-const source = audioContext.createMediaElementSource(audio);
-
-source.connect(analyser);
-analyser.connect(audioContext.destination);
-
-function visualizeAudio() {
-  const bufferLength = analyser.frequencyBinCount;
-  const dataArray = new Uint8Array(bufferLength);
-  analyser.getByteFrequencyData(dataArray);
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const barWidth = canvas.width / bufferLength;
-
-  dataArray.forEach((value, index) => {
-    const barHeight = (value / 255) * canvas.height;
-    const x = index * barWidth;
-    const y = canvas.height - barHeight;
-
-    ctx.fillStyle = `rgb(${value}, 50, 150)`;
-    ctx.fillRect(x, y, barWidth, barHeight);
-  });
-
-  requestAnimationFrame(visualizeAudio);
-}
-
-// Animación Principal
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawGrid();
-  drawBezier();
-  particles.forEach(particle => particle.update());
-  requestAnimationFrame(animate);
-}
-
-audio.addEventListener('play', () => {
-  audioContext.resume();
-  visualizeAudio();
+    soundEffect.play();
 });
 
-animate();
-audio.play();
+// Configuramos la Web Audio API para análisis de frecuencia
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+const analyser = audioContext.createAnalyser();
+const source = audioContext.createMediaElementSource(soundEffect);
+source.connect(analyser);
+analyser.connect(audioContext.destination);
+analyser.fftSize = 256;
+const bufferLength = analyser.frequencyBinCount;
+const dataArray = new Uint8Array(bufferLength);
+
+// Clase para las partículas
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = Math.random() * 2 - 1;
+        this.vy = Math.random() * 2 - 1;
+        this.radius = Math.random() * 5 + 2;
+        this.color = color;
+        this.caught = false; // Indica si la partícula ha sido "agarrada"
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+    }
+
+    update() {
+        if (!this.caught) {
+            // Efecto de movimiento de partículas de acuerdo a la frecuencia
+            const frequency = dataArray[Math.floor(Math.random() * bufferLength)] / 255; // Extraemos una frecuencia aleatoria
+            this.vx += frequency * 0.5 - 0.25;
+            this.vy += frequency * 0.5 - 0.25;
+
+            // Movimiento hacia el mouse
+            const dx = mouseX - this.x;
+            const dy = mouseY - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = 50;
+
+            if (dist < maxDist) {
+                this.caught = true; // Marca la partícula como atrapada
+            }
+
+            // Mueve la partícula
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Rebote de partículas en los bordes
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+            this.draw();
+        }
+    }
+}
+
+let particles = [];
+let totalParticles = 0;
+let caughtParticles = 0;
+
+function loadImage(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+    });
+}
+
+function createParticles(img) {
+    const imgCanvas = document.createElement('canvas');
+    const imgCtx = imgCanvas.getContext('2d');
+    imgCanvas.width = img.width;
+    imgCanvas.height = img.height;
+    imgCtx.drawImage(img, 0, 0);
+
+    const imgData = imgCtx.getImageData(0, 0, img.width, img.height).data;
+
+    particles = [];
+    for (let y = 0; y < img.height; y++) {
+        for (let x = 0; x < img.width; x++) {
+            const i = (y * img.width + x) * 4;
+            const r = imgData[i];
+            const g = imgData[i + 1];
+            const b = imgData[i + 2];
+            const a = imgData[i + 3];
+
+            if (a > 128 && particles.length < maxParticles) {
+                const color = `rgb(${r},${g},${b})`;
+                particles.push(new Particle(x, y, color));
+                totalParticles++;
+            }
+        }
+    }
+}
+
+function drawBackground() {
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, 'rgba(0, 198, 255, 0.8)');
+    gradient.addColorStop(1, 'rgba(0, 114, 255, 0.8)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackground();
+    analyser.getByteFrequencyData(dataArray); // Obtiene los datos de la frecuencia de la música
+    particles.forEach((particle) => particle.update());
+
+    requestAnimationFrame(animate);
+}
+
+function showImageEffect() {
+    ctx.fillStyle = 'white';
+    ctx.font = '50px Arial';
+    ctx.fillText("¡Objetivo Cumplido!", canvas.width / 2 - 150, canvas.height / 2);
+}
+
+// Manejador de eventos para actualizar la posición del ratón
+canvas.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
+loadImage('./assets/prueba1.jpg')
+    .then((img) => {
+        createParticles(img);
+        animate();
+    })
+    .catch((err) => {
+        console.error('Error al cargar la imagen:', err);
+    });
