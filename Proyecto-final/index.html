@@ -1,17 +1,101 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Experiencia Inmersiva</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Visualización Interactiva de Audio</title>
+  <style>
+    /* Estilos globales para garantizar que todo se ajuste */
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%; /* Asegura que el canvas ocupe todo el ancho disponible */
+      height: 100%; /* Asegura que el canvas ocupe todo el alto disponible */
+    }
+
+    .controls {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 1.5em;
+      z-index: 100;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .controls button, .controls input {
+      padding: 10px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      color: white;
+      font-size: 1.2em;
+    }
+
+    .controls button:hover, .controls input:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Estilo del control de volumen */
+    .controls input[type="range"] {
+      width: 80%;
+      max-width: 300px; /* Limita el tamaño máximo del control */
+      margin: 20px 0;
+    }
+
+    /* Medios para pantallas pequeñas (teléfonos y tabletas) */
+    @media (max-width: 768px) {
+      .controls {
+        font-size: 1.2em;
+      }
+
+      .controls button, .controls input {
+        font-size: 1em;
+      }
+
+      .controls input[type="range"] {
+        width: 90%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .controls {
+        font-size: 1em;
+      }
+
+      .controls button, .controls input {
+        font-size: 0.9em;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="content">
-        <canvas id="canvas"></canvas>
-    </div>
 
-    <script src="script.js"></script>
+  <div class="controls">
+    <button id="playPauseButton">Reproducir</button>
+    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+  </div>
+
+  <script type="module" src="script.js"></script>
 </body>
 </html>
