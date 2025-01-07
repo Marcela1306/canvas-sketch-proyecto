@@ -3,99 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Visualización Interactiva de Audio</title>
+  <title>Visualización de Audio</title>
   <style>
-    /* Estilos globales para garantizar que todo se ajuste */
-    body, html {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #000;
+      background-color: black;
       overflow: hidden;
-    }
-
-    canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%; /* Asegura que el canvas ocupe todo el ancho disponible */
-      height: 100%; /* Asegura que el canvas ocupe todo el alto disponible */
     }
 
     .controls {
       position: absolute;
       top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: white;
-      font-size: 1.5em;
-      z-index: 100;
-      text-align: center;
+      width: 100%;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      z-index: 1;
     }
 
-    .controls button, .controls input {
-      padding: 10px;
+    button, input {
       margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
       border: none;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.2);
       cursor: pointer;
+    }
+
+    button {
+      background: #FF5722;
       color: white;
-      font-size: 1.2em;
     }
 
-    .controls button:hover, .controls input:hover {
-      background: rgba(255, 255, 255, 0.4);
-    }
-
-    /* Estilo del control de volumen */
-    .controls input[type="range"] {
-      width: 80%;
-      max-width: 300px; /* Limita el tamaño máximo del control */
-      margin: 20px 0;
-    }
-
-    /* Medios para pantallas pequeñas (teléfonos y tabletas) */
-    @media (max-width: 768px) {
-      .controls {
-        font-size: 1.2em;
-      }
-
-      .controls button, .controls input {
-        font-size: 1em;
-      }
-
-      .controls input[type="range"] {
-        width: 90%;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .controls {
-        font-size: 1em;
-      }
-
-      .controls button, .controls input {
-        font-size: 0.9em;
-      }
+    input[type="range"] {
+      width: 200px;
     }
   </style>
 </head>
 <body>
-
   <div class="controls">
-    <button id="playPauseButton">Reproducir</button>
-    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+    <button id="playPauseButton" aria-label="Reproducir audio">Reproducir</button>
+    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5" aria-label="Control de volumen">
   </div>
-
   <script type="module" src="script.js"></script>
 </body>
 </html>
